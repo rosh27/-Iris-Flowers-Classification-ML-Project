@@ -1,0 +1,14 @@
+import numpy as np
+import tensorflow as tf
+import pandas as pd
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from sklearn import datasets, model_selection
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import seaborn as sns
+sns.set()
+plt.rcParams['figure.figsize'] = (15, 9)
+data = datasets.load_iris()
