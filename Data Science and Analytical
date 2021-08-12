@@ -12,3 +12,188 @@ import seaborn as sns
 sns.set()
 plt.rcParams['figure.figsize'] = (15, 9)
 data = datasets.load_iris()
+X = data['data']
+y = data['target']
+print(X.shape)
+print(y.shape)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, train_size=0.8, random_state=15)
+# Plot the training data
+
+labels = {0: 'Iris-Setosa', 1: 'Iris-Versicolour', 2: 'Iris-Virginica'}
+label_colours = ['blue', 'orange', 'green']
+
+def plot_data(x, y, labels, colours, a=0, b=1, title='Training set'):
+    for c in np.unique(y):
+        inx = np.where(y == c)
+        plt.scatter(x[inx, a], x[inx, b], label=labels[c], c=colours[c])
+    plt.title(title)
+    plt.xlabel("Sepal length (cm)")
+    plt.ylabel("Sepal width (cm)")
+    plt.legend()
+    
+plt.figure(figsize=(15, 9))
+plot_data(X_train, y_train, labels, label_colours)
+plt.show()
+# Feature Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+tf.keras.backend.clear_session()
+mlp = Sequential([
+    Dense(3, input_shape=(4,), activation='softmax')
+])
+
+mlp.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+mlp.summary()
+history = mlp.fit(X_train, y_train, validation_split=0.1, batch_size=16, epochs=1000, verbose=0)
+df = pd.DataFrame(history.history)
+df.head()
+plt.figure(figsize=(15, 6))
+
+plt.subplot(1,2,1)
+plt.plot(df['loss'], c='red', label='Training Loss')
+plt.plot(df['val_loss'], c='blue', label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss vs. Epoch')
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(df['accuracy'], c='r', label='Training Accuracy')
+plt.plot(df['val_accuracy'], c='b', label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs. Epoch')
+plt.legend()
+
+plt.show()
+mlp.evaluate(X_train, y_train)
+print(f'Test Accuracy: { mlp.evaluate(X_test, y_test)[1]:.2%}')
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X[:,:2], y, train_size=0.8, random_state=15)
+
+# Feature Scaling
+scaler = StandardScaler()
+x_train = scaler.fit_transform(X_train)
+x_test = scaler.transform(X_test)
+x_train.shape
+tf.keras.backend.clear_session()
+classifier = Sequential([
+    Dense(5, input_shape=(2,), activation = 'relu'),
+    Dense(3, activation='softmax')
+])
+
+classifier.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+classifier.summary()
+history = classifier.fit(x_train, y_train, validation_split=0.1, batch_size=16, epochs=1000, verbose=0)
+
+df = pd.DataFrame(history.history)
+df.tail()
+plt.figure(figsize=(15, 6))
+
+plt.subplot(1,2,1)
+plt.plot(df['loss'], c='red', label='Training Loss')
+plt.plot(df['val_loss'], c='blue', label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss vs. Epoch')
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(df['accuracy'], c='r', label='Training Accuracy')
+plt.plot(df['val_accuracy'], c='b', label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs. Epoch')
+plt.legend()
+
+plt.show()
+classifier.evaluate(x_train, y_train)
+print(f'Test Accuracy: {classifier.evaluate(x_test, y_test)[1]:.2%}')
+# evaluate using confusion matrix
+
+y_pred = np.argmax(classifier.predict(x_test), axis=1)
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(7,5))
+sns.heatmap(cm, cmap='Blues')
+def get_meshgrid(x0_range, x1_range, num_points=100):
+    x0 = np.linspace(x0_range[0], x0_range[1], num_points)
+    x1 = np.linspace(x1_range[0], x1_range[1], num_points)
+    
+    return np.meshgrid(x0, x1)
+    # Visualize
+
+num_points = 500
+x_mesh, y_mesh = get_meshgrid([X[:, 0].min() - 0.5, X[:, 0].max() + 0.5],
+                             [X[:, 1].min() - 0.5, X[:, 1].max() + 0.5], num_points=num_points)
+y_pred = np.argmax(classifier.predict(scaler.transform(np.array([x_mesh.ravel(), y_mesh.ravel()]).T)), axis=1).reshape((num_points, num_points))
+
+plt.contourf(x_mesh, y_mesh, y_pred, cmap=ListedColormap(label_colours), alpha=0.25)
+plot_data(X, y, labels, label_colours, title='Decision Boundaries (Multilayer Perceptron)')
+plt.show()
+# logistic regression model
+from sklearn.linear_model import LogisticRegression
+classifier = LogisticRegression(random_state = 0)
+classifier.fit(x_train, y_train)
+# result test
+y_pred = classifier.predict(x_test)
+y_pred
+# evaluate using confusion matrix
+cm = confusion_matrix(y_test, y_pred )
+diagonal = np.sum(np.diagonal(cm))
+Accuracy = diagonal / len(y_test)
+print(f'Test Accuracy: {Accuracy: .2%}')
+plt.figure(figsize=(7,5))
+sns.heatmap(cm, cmap='Blues')
+# Visualize
+
+num_points = 500
+x_mesh, y_mesh = get_meshgrid([X[:, 0].min() - 0.5, X[:, 0].max() + 0.5],
+                             [X[:, 1].min() - 0.5, X[:, 1].max() + 0.5], num_points=num_points)
+y_pred = classifier.predict(scaler.transform(np.array([x_mesh.ravel(), y_mesh.ravel()]).T)).reshape((num_points, num_points))
+
+plt.contourf(x_mesh, y_mesh, y_pred, cmap=ListedColormap(label_colours), alpha=0.25)
+plot_data(X, y, labels, label_colours, title='Decision Boundaries (Logistic Regression)')
+plt.show()
+from sklearn.svm import SVC
+classifier = SVC(kernel='rbf', random_state=0)
+classifier.fit(x_train, y_train)
+from sklearn.svm import SVC
+classifier = SVC(kernel='rbf', random_state=0)
+classifier.fit(x_train, y_train)
+cm = confusion_matrix(y_test, y_pred)
+diagonal = np.sum(np.diagonal(cm))
+Accuracy = diagonal / len(y_test)
+print(f'Test Accuracy: {Accuracy: .2%}')
+plt.figure(figsize=(7,5))
+sns.heatmap(cm, cmap='Blues')
+# Visualize
+
+num_points = 500
+x_mesh, y_mesh = get_meshgrid([X[:, 0].min() - 0.5, X[:, 0].max() + 0.5],
+                             [X[:, 1].min() - 0.5, X[:, 1].max() + 0.5], num_points=num_points)
+y_pred = classifier.predict(scaler.transform(np.array([x_mesh.ravel(), y_mesh.ravel()]).T)).reshape((num_points, num_points))
+
+plt.contourf(x_mesh, y_mesh, y_pred, cmap=ListedColormap(label_colours), alpha=0.25)
+plot_data(X, y, labels, label_colours, title='Decision Boundaries (Support Vector Machine)')
+plt.show()
+from sklearn.neighbors import KNeighborsClassifier
+classifier = KNeighborsClassifier(n_neighbors=5, metric = 'minkowski', p = 2)
+classifier.fit(x_train, y_train)
+y_pred = classifier.predict(x_test)
+cm = confusion_matrix(y_test, y_pred)
+diagonal = np.sum(np.diagonal(cm))
+Accuracy = diagonal / len(y_test)
+print(f'Test Accuracy: {Accuracy: .2%}')
+plt.figure(figsize=(7,5))
+sns.heatmap(cm, cmap='Blues')
+# Visualize
+
+num_points = 500
+x_mesh, y_mesh = get_meshgrid([X[:, 0].min() - 0.5, X[:, 0].max() + 0.5],
+                             [X[:, 1].min() - 0.5, X[:, 1].max() + 0.5], num_points=num_points)
+y_pred = classifier.predict(scaler.transform(np.array([x_mesh.ravel(), y_mesh.ravel()]).T)).reshape((num_points, num_points))
+
+plt.contourf(x_mesh, y_mesh, y_pred, cmap=ListedColormap(label_colours), alpha=0.25)
+plot_data(X, y, labels, label_colours, title='Decision Boundaries (K-Nearest Neighbor)')
+plt.show()
+
